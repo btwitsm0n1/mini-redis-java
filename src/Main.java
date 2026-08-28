@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -8,54 +10,30 @@ public class Main {
 
         CommandHandler handler = new CommandHandler(store);
 
+        Scanner scanner = new Scanner(System.in);
 
-        // SET
-        String input = "SET name Moni";
+        System.out.println("MiniRedis started!");
+        System.out.println("Type 'EXIT' to stop the server.");
 
-        String[] parts = parser.parse(input);
+        while (true) {
 
-        String response = handler.execute(parts);
+            System.out.print("MiniRedis> ");
 
-        System.out.println(response);
+            String input = scanner.nextLine();
 
+            if (input.equalsIgnoreCase("EXIT")) {
+                break;
+            }
 
-        // GET
-        input = "GET name";
+            String[] parts = parser.parse(input);
 
-        parts = parser.parse(input);
+            String response = handler.execute(parts);
 
-        response = handler.execute(parts);
+            System.out.println(response);
+        }
 
-        System.out.println(response);
+        scanner.close();
 
-
-        // EXISTS
-        input = "EXISTS name";
-
-        parts = parser.parse(input);
-
-        response = handler.execute(parts);
-
-        System.out.println(response);
-
-
-        // DELETE
-        input = "DELETE name";
-
-        parts = parser.parse(input);
-
-        response = handler.execute(parts);
-
-        System.out.println(response);
-
-
-        // GET after DELETE
-        input = "GET name";
-
-        parts = parser.parse(input);
-
-        response = handler.execute(parts);
-
-        System.out.println(response);
+        System.out.println("MiniRedis stopped.");
     }
 }
