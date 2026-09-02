@@ -34,6 +34,15 @@ public class CommandHandler {
             return String.valueOf(store.exists(parts[1]));
         }
 
+        if (command.equals("EXPIRE")) {
+            boolean result = store.expire(
+                parts[1],
+                Long.parseLong(parts[2])
+            );
+
+            return String.valueOf(result);
+        }
+
         return "Unknown command";
     }
 }
