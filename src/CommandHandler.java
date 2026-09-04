@@ -8,7 +8,7 @@ public class CommandHandler {
 
     public String execute(String[] parts) {
 
-        String command = parts[0];
+        String command = parts[0].toUpperCase();
 
         if (command.equals("SET")) {
             store.set(parts[1], parts[2]);
@@ -35,12 +35,20 @@ public class CommandHandler {
         }
 
         if (command.equals("EXPIRE")) {
+
             boolean result = store.expire(
-                parts[1],
-                Long.parseLong(parts[2])
+                    parts[1],
+                    Long.parseLong(parts[2])
             );
 
             return String.valueOf(result);
+        }
+
+        if (command.equals("TTL")) {
+
+            return String.valueOf(
+                    store.ttl(parts[1])
+            );
         }
 
         return "Unknown command";
