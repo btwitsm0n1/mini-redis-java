@@ -31,7 +31,7 @@ public class DataStore {
 
         store.put(key, value);
 
-        // New SET removes previous expiry
+        // A new SET removes any previous expiry
         expiryTimes.remove(key);
     }
 
@@ -112,17 +112,90 @@ public class DataStore {
             return -2;
         }
 
-        // Round up to next second
+        // Round up to the next second
         return (remainingMillis + 999) / 1000;
     }
 
     // KEYS command
     public Set<String> keys() {
 
-        // Remove expired keys first
+        // Remove expired keys before returning keys
         removeExpiredKeys();
 
         return store.keySet();
+    }
+
+    // Return total number of keys
+    public int size() {
+
+        // Remove expired keys before counting
+        removeExpiredKeys();
+
+        return store.size();
+    }
+
+    // INCR command
+    public long incr(String key) {
+
+        // Remove key if it has expired
+        if (isExpired(key)) {
+            delete(key);
+        }
+
+        String value = store.get(key);
+
+        // If key does not exist, start from 1
+        if (value == null) {
+            store.put(key, "1");
+            return 1;
+        }
+
+        try {
+            long number = Long.parseLong(value);
+
+            number++;
+
+            store.put(key, String.valueOf(number));
+
+            return number;
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "value is not an integer"
+            );
+        }
+    }
+
+    // DECR command
+    public long decr(String key) {
+
+        // Remove key if it has expired
+        if (isExpired(key)) {
+            delete(key);
+        }
+
+        String value = store.get(key);
+
+        // If key does not exist, start from -1
+        if (value == null) {
+            store.put(key, "-1");
+            return -1;
+        }
+
+        try {
+            long number = Long.parseLong(value);
+
+            number--;
+
+            store.put(key, String.valueOf(number));
+
+            return number;
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "value is not an integer"
+            );
+        }
     }
 
     // FLUSHALL command
@@ -132,7 +205,7 @@ public class DataStore {
         expiryTimes.clear();
     }
 
-    // Check whether key is expired
+    // Check whether a key is expired
     private boolean isExpired(String key) {
 
         Long expiryTime = expiryTimes.get(key);

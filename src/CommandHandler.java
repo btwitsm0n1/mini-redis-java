@@ -109,6 +109,30 @@ public class CommandHandler {
                 return store.keys().toString();
             }
 
+            // INCR
+            if (command.equals("INCR")) {
+
+                if (parts.length < 2) {
+                    return "ERR wrong number of arguments for INCR";
+                }
+
+                return String.valueOf(
+                        store.incr(parts[1])
+                );
+            }
+
+            // DECR
+            if (command.equals("DECR")) {
+
+                if (parts.length < 2) {
+                    return "ERR wrong number of arguments for DECR";
+                }
+
+                return String.valueOf(
+                        store.decr(parts[1])
+                );
+            }
+
             // FLUSHALL
             if (command.equals("FLUSHALL")) {
 
