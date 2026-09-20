@@ -198,6 +198,66 @@ public class DataStore {
         }
     }
 
+    // APPEND command
+    public int append(String key, String value) {
+
+        if (isExpired(key)) {
+            delete(key);
+        }
+
+        String existingValue = store.get(key);
+
+        if (existingValue == null) {
+            store.put(key, value);
+            return value.length();
+        }
+
+        String newValue = existingValue + value;
+
+        store.put(key, newValue);
+
+        return newValue.length();
+    }
+
+    // MSET command
+    public void mset(String[] keyValuePairs) {
+
+        for (int i = 0; i < keyValuePairs.length; i += 2) {
+
+            String key = keyValuePairs[i];
+            String value = keyValuePairs[i + 1];
+
+            set(key, value);
+        }
+    }
+
+    // MGET command
+    public String mget(String[] keys) {
+
+        StringBuilder result = new StringBuilder();
+
+        result.append("[");
+
+        for (int i = 0; i < keys.length; i++) {
+
+            String value = get(keys[i]);
+
+            if (value == null) {
+                result.append("(nil)");
+            } else {
+                result.append(value);
+            }
+
+            if (i < keys.length - 1) {
+                result.append(", ");
+            }
+        }
+
+        result.append("]");
+
+        return result.toString();
+    }
+
     // FLUSHALL command
     public void flushAll() {
 

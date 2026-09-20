@@ -133,6 +133,62 @@ public class CommandHandler {
                 );
             }
 
+            // APPEND
+            if (command.equals("APPEND")) {
+
+                if (parts.length < 3) {
+                    return "ERR wrong number of arguments for APPEND";
+                }
+
+                return String.valueOf(
+                        store.append(parts[1], parts[2])
+                );
+            }
+
+            // MSET
+            if (command.equals("MSET")) {
+
+                if (parts.length < 3 || parts.length % 2 == 0) {
+                    return "ERR wrong number of arguments for MSET";
+                }
+
+                String[] keyValuePairs =
+                        new String[parts.length - 1];
+
+                System.arraycopy(
+                        parts,
+                        1,
+                        keyValuePairs,
+                        0,
+                        parts.length - 1
+                );
+
+                store.mset(keyValuePairs);
+
+                return "OK";
+            }
+
+            // MGET
+            if (command.equals("MGET")) {
+
+                if (parts.length < 2) {
+                    return "ERR wrong number of arguments for MGET";
+                }
+
+                String[] keys =
+                        new String[parts.length - 1];
+
+                System.arraycopy(
+                        parts,
+                        1,
+                        keys,
+                        0,
+                        parts.length - 1
+                );
+
+                return store.mget(keys);
+            }
+
             // FLUSHALL
             if (command.equals("FLUSHALL")) {
 
