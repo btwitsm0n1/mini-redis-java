@@ -2,23 +2,31 @@ public class CommandHandler {
 
     private final DataStore store;
 
+
     public CommandHandler(DataStore store) {
+
         this.store = store;
     }
 
+
     public String execute(String[] parts) {
 
-        if (parts == null || parts.length == 0) {
+        if (parts == null
+                || parts.length == 0) {
+
             return "ERR empty command";
         }
 
-        String command = parts[0].toUpperCase();
+
+        String command =
+                parts[0].toUpperCase();
 
 
         // PING
         if (command.equals("PING")) {
 
             if (parts.length != 1) {
+
                 return "ERR wrong number of arguments for PING";
             }
 
@@ -30,12 +38,48 @@ public class CommandHandler {
         if (command.equals("SET")) {
 
             if (parts.length != 3) {
+
                 return "ERR wrong number of arguments for SET";
             }
 
-            store.set(parts[1], parts[2]);
+            store.set(
+                    parts[1],
+                    parts[2]
+            );
 
             return "OK";
+        }
+
+
+        // SETNX
+        if (command.equals("SETNX")) {
+
+            if (parts.length != 3) {
+
+                return "ERR wrong number of arguments for SETNX";
+            }
+
+            return String.valueOf(
+                    store.setNx(
+                            parts[1],
+                            parts[2]
+                    ) ? 1 : 0
+            );
+        }
+
+
+        // GETSET
+        if (command.equals("GETSET")) {
+
+            if (parts.length != 3) {
+
+                return "ERR wrong number of arguments for GETSET";
+            }
+
+            return store.getSet(
+                    parts[1],
+                    parts[2]
+            );
         }
 
 
@@ -43,12 +87,15 @@ public class CommandHandler {
         if (command.equals("GET")) {
 
             if (parts.length != 2) {
+
                 return "ERR wrong number of arguments for GET";
             }
 
-            String value = store.get(parts[1]);
+            String value =
+                    store.get(parts[1]);
 
             if (value == null) {
+
                 return "(nil)";
             }
 
@@ -57,14 +104,27 @@ public class CommandHandler {
 
 
         // DELETE
+        // Supports multiple keys
         if (command.equals("DELETE")) {
 
-            if (parts.length != 2) {
+            if (parts.length < 2) {
+
                 return "ERR wrong number of arguments for DELETE";
             }
 
+            String[] keys =
+                    new String[parts.length - 1];
+
+            System.arraycopy(
+                    parts,
+                    1,
+                    keys,
+                    0,
+                    parts.length - 1
+            );
+
             return String.valueOf(
-                    store.delete(parts[1])
+                    store.delete(keys)
             );
         }
 
@@ -73,6 +133,7 @@ public class CommandHandler {
         if (command.equals("EXISTS")) {
 
             if (parts.length != 2) {
+
                 return "ERR wrong number of arguments for EXISTS";
             }
 
@@ -86,15 +147,20 @@ public class CommandHandler {
         if (command.equals("EXPIRE")) {
 
             if (parts.length != 3) {
+
                 return "ERR wrong number of arguments for EXPIRE";
             }
 
             try {
 
-                long seconds = Long.parseLong(parts[2]);
+                long seconds =
+                        Long.parseLong(parts[2]);
 
                 return String.valueOf(
-                        store.expire(parts[1], seconds)
+                        store.expire(
+                                parts[1],
+                                seconds
+                        )
                 );
 
             } catch (NumberFormatException e) {
@@ -108,6 +174,7 @@ public class CommandHandler {
         if (command.equals("TTL")) {
 
             if (parts.length != 2) {
+
                 return "ERR wrong number of arguments for TTL";
             }
 
@@ -121,6 +188,7 @@ public class CommandHandler {
         if (command.equals("KEYS")) {
 
             if (parts.length != 1) {
+
                 return "ERR wrong number of arguments for KEYS";
             }
 
@@ -132,6 +200,7 @@ public class CommandHandler {
         if (command.equals("INCR")) {
 
             if (parts.length != 2) {
+
                 return "ERR wrong number of arguments for INCR";
             }
 
@@ -152,6 +221,7 @@ public class CommandHandler {
         if (command.equals("DECR")) {
 
             if (parts.length != 2) {
+
                 return "ERR wrong number of arguments for DECR";
             }
 
@@ -172,15 +242,20 @@ public class CommandHandler {
         if (command.equals("INCRBY")) {
 
             if (parts.length != 3) {
+
                 return "ERR wrong number of arguments for INCRBY";
             }
 
             try {
 
-                long amount = Long.parseLong(parts[2]);
+                long amount =
+                        Long.parseLong(parts[2]);
 
                 return String.valueOf(
-                        store.incrBy(parts[1], amount)
+                        store.incrBy(
+                                parts[1],
+                                amount
+                        )
                 );
 
             } catch (NumberFormatException e) {
@@ -198,15 +273,20 @@ public class CommandHandler {
         if (command.equals("DECRBY")) {
 
             if (parts.length != 3) {
+
                 return "ERR wrong number of arguments for DECRBY";
             }
 
             try {
 
-                long amount = Long.parseLong(parts[2]);
+                long amount =
+                        Long.parseLong(parts[2]);
 
                 return String.valueOf(
-                        store.decrBy(parts[1], amount)
+                        store.decrBy(
+                                parts[1],
+                                amount
+                        )
                 );
 
             } catch (NumberFormatException e) {
@@ -224,11 +304,15 @@ public class CommandHandler {
         if (command.equals("APPEND")) {
 
             if (parts.length < 3) {
+
                 return "ERR wrong number of arguments for APPEND";
             }
 
             return String.valueOf(
-                    store.append(parts[1], parts[2])
+                    store.append(
+                            parts[1],
+                            parts[2]
+                    )
             );
         }
 
@@ -263,6 +347,7 @@ public class CommandHandler {
         if (command.equals("MGET")) {
 
             if (parts.length < 2) {
+
                 return "ERR wrong number of arguments for MGET";
             }
 
@@ -285,6 +370,7 @@ public class CommandHandler {
         if (command.equals("FLUSHALL")) {
 
             if (parts.length != 1) {
+
                 return "ERR wrong number of arguments for FLUSHALL";
             }
 

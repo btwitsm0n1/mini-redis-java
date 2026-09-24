@@ -1,15 +1,17 @@
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class DataStore {
 
-    private final Map<String, String> store = new ConcurrentHashMap<>();
+    private final Map<String, String> store =
+            new ConcurrentHashMap<>();
 
-    private final Map<String, Long> expiryTimes = new ConcurrentHashMap<>();
+    private final Map<String, Long> expiryTimes =
+            new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor();
@@ -26,21 +28,23 @@ public class DataStore {
     }
 
 
-    // SET command
+    // SET
     public void set(String key, String value) {
 
         store.put(key, value);
 
-        // New SET removes any previous expiry
+        // SET removes previous expiry
         expiryTimes.remove(key);
     }
 
 
-    // GET command
+    // GET
     public String get(String key) {
 
         if (isExpired(key)) {
+
             delete(key);
+
             return null;
         }
 
@@ -48,22 +52,33 @@ public class DataStore {
     }
 
 
-    // DELETE command
-    public boolean delete(String key) {
+    // DELETE
+    // Supports one or multiple keys
+    public int delete(String... keys) {
 
-        boolean removed = store.remove(key) != null;
+        int deletedCount = 0;
 
-        expiryTimes.remove(key);
+        for (String key : keys) {
 
-        return removed;
+            if (store.remove(key) != null) {
+
+                deletedCount++;
+            }
+
+            expiryTimes.remove(key);
+        }
+
+        return deletedCount;
     }
 
 
-    // EXISTS command
+    // EXISTS
     public boolean exists(String key) {
 
         if (isExpired(key)) {
+
             delete(key);
+
             return false;
         }
 
@@ -71,15 +86,18 @@ public class DataStore {
     }
 
 
-    // EXPIRE command
+    // EXPIRE
     public boolean expire(String key, long seconds) {
 
         if (!store.containsKey(key)) {
+
             return false;
         }
 
         if (isExpired(key)) {
+
             delete(key);
+
             return false;
         }
 
@@ -93,30 +111,38 @@ public class DataStore {
     }
 
 
-    // TTL command
+    // TTL
     public long ttl(String key) {
 
         if (!store.containsKey(key)) {
+
             return -2;
         }
 
         if (isExpired(key)) {
+
             delete(key);
+
             return -2;
         }
 
-        Long expiryTime = expiryTimes.get(key);
+        Long expiryTime =
+                expiryTimes.get(key);
 
-        // Key exists but has no expiry
+        // Key has no expiry
         if (expiryTime == null) {
+
             return -1;
         }
 
         long remainingMillis =
-                expiryTime - System.currentTimeMillis();
+                expiryTime
+                        - System.currentTimeMillis();
 
         if (remainingMillis <= 0) {
+
             delete(key);
+
             return -2;
         }
 
@@ -124,7 +150,7 @@ public class DataStore {
     }
 
 
-    // KEYS command
+    // KEYS
     public Set<String> keys() {
 
         removeExpiredKeys();
@@ -133,26 +159,34 @@ public class DataStore {
     }
 
 
-    // INCR command
+    // INCR
     public long incr(String key) {
 
         if (isExpired(key)) {
+
             delete(key);
         }
 
-        String value = store.get(key);
+        String value =
+                store.get(key);
 
         if (value == null) {
+
             value = "0";
         }
 
         try {
 
-            long currentValue = Long.parseLong(value);
+            long currentValue =
+                    Long.parseLong(value);
 
-            long newValue = currentValue + 1;
+            long newValue =
+                    currentValue + 1;
 
-            store.put(key, String.valueOf(newValue));
+            store.put(
+                    key,
+                    String.valueOf(newValue)
+            );
 
             return newValue;
 
@@ -165,26 +199,34 @@ public class DataStore {
     }
 
 
-    // DECR command
+    // DECR
     public long decr(String key) {
 
         if (isExpired(key)) {
+
             delete(key);
         }
 
-        String value = store.get(key);
+        String value =
+                store.get(key);
 
         if (value == null) {
+
             value = "0";
         }
 
         try {
 
-            long currentValue = Long.parseLong(value);
+            long currentValue =
+                    Long.parseLong(value);
 
-            long newValue = currentValue - 1;
+            long newValue =
+                    currentValue - 1;
 
-            store.put(key, String.valueOf(newValue));
+            store.put(
+                    key,
+                    String.valueOf(newValue)
+            );
 
             return newValue;
 
@@ -197,26 +239,36 @@ public class DataStore {
     }
 
 
-    // INCRBY command
-    public long incrBy(String key, long amount) {
+    // INCRBY
+    public long incrBy(
+            String key,
+            long amount) {
 
         if (isExpired(key)) {
+
             delete(key);
         }
 
-        String value = store.get(key);
+        String value =
+                store.get(key);
 
         if (value == null) {
+
             value = "0";
         }
 
         try {
 
-            long currentValue = Long.parseLong(value);
+            long currentValue =
+                    Long.parseLong(value);
 
-            long newValue = currentValue + amount;
+            long newValue =
+                    currentValue + amount;
 
-            store.put(key, String.valueOf(newValue));
+            store.put(
+                    key,
+                    String.valueOf(newValue)
+            );
 
             return newValue;
 
@@ -229,26 +281,36 @@ public class DataStore {
     }
 
 
-    // DECRBY command
-    public long decrBy(String key, long amount) {
+    // DECRBY
+    public long decrBy(
+            String key,
+            long amount) {
 
         if (isExpired(key)) {
+
             delete(key);
         }
 
-        String value = store.get(key);
+        String value =
+                store.get(key);
 
         if (value == null) {
+
             value = "0";
         }
 
         try {
 
-            long currentValue = Long.parseLong(value);
+            long currentValue =
+                    Long.parseLong(value);
 
-            long newValue = currentValue - amount;
+            long newValue =
+                    currentValue - amount;
 
-            store.put(key, String.valueOf(newValue));
+            store.put(
+                    key,
+                    String.valueOf(newValue)
+            );
 
             return newValue;
 
@@ -261,14 +323,18 @@ public class DataStore {
     }
 
 
-    // APPEND command
-    public int append(String key, String value) {
+    // APPEND
+    public int append(
+            String key,
+            String value) {
 
         if (isExpired(key)) {
+
             delete(key);
         }
 
-        String existingValue = store.get(key);
+        String existingValue =
+                store.get(key);
 
         if (existingValue == null) {
 
@@ -277,7 +343,8 @@ public class DataStore {
             return value.length();
         }
 
-        String newValue = existingValue + value;
+        String newValue =
+                existingValue + value;
 
         store.put(key, newValue);
 
@@ -285,30 +352,39 @@ public class DataStore {
     }
 
 
-    // MSET command
-    public void mset(String[] keyValuePairs) {
+    // MSET
+    public void mset(
+            String[] keyValuePairs) {
 
-        for (int i = 0; i < keyValuePairs.length; i += 2) {
+        for (int i = 0;
+             i < keyValuePairs.length;
+             i += 2) {
 
-            String key = keyValuePairs[i];
+            String key =
+                    keyValuePairs[i];
 
-            String value = keyValuePairs[i + 1];
+            String value =
+                    keyValuePairs[i + 1];
 
             set(key, value);
         }
     }
 
 
-    // MGET command
+    // MGET
     public String mget(String[] keys) {
 
-        StringBuilder result = new StringBuilder();
+        StringBuilder result =
+                new StringBuilder();
 
         result.append("[");
 
-        for (int i = 0; i < keys.length; i++) {
+        for (int i = 0;
+             i < keys.length;
+             i++) {
 
-            String value = get(keys[i]);
+            String value =
+                    get(keys[i]);
 
             if (value == null) {
 
@@ -331,7 +407,52 @@ public class DataStore {
     }
 
 
-    // FLUSHALL command
+    // SETNX
+    public boolean setNx(
+            String key,
+            String value) {
+
+        if (isExpired(key)) {
+
+            delete(key);
+        }
+
+        if (store.containsKey(key)) {
+
+            return false;
+        }
+
+        store.put(key, value);
+
+        return true;
+    }
+
+
+    // GETSET
+    public String getSet(
+            String key,
+            String newValue) {
+
+        if (isExpired(key)) {
+
+            delete(key);
+        }
+
+        String oldValue =
+                store.get(key);
+
+        store.put(key, newValue);
+
+        if (oldValue == null) {
+
+            return "(nil)";
+        }
+
+        return oldValue;
+    }
+
+
+    // FLUSHALL
     public void flushAll() {
 
         store.clear();
@@ -340,27 +461,33 @@ public class DataStore {
     }
 
 
-    // Check whether key is expired
+    // Check expiry
     private boolean isExpired(String key) {
 
-        Long expiryTime = expiryTimes.get(key);
+        Long expiryTime =
+                expiryTimes.get(key);
 
         if (expiryTime == null) {
+
             return false;
         }
 
-        return System.currentTimeMillis() >= expiryTime;
+        return System.currentTimeMillis()
+                >= expiryTime;
     }
 
 
-    // Remove expired keys automatically
+    // Automatically remove expired keys
     private void removeExpiredKeys() {
 
-        long currentTime = System.currentTimeMillis();
+        long currentTime =
+                System.currentTimeMillis();
 
-        for (String key : expiryTimes.keySet()) {
+        for (String key :
+                expiryTimes.keySet()) {
 
-            Long expiryTime = expiryTimes.get(key);
+            Long expiryTime =
+                    expiryTimes.get(key);
 
             if (expiryTime != null
                     && currentTime >= expiryTime) {
