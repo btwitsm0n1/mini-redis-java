@@ -8,209 +8,293 @@ public class CommandHandler {
 
     public String execute(String[] parts) {
 
-        if (parts.length == 0) {
+        if (parts == null || parts.length == 0) {
             return "ERR empty command";
         }
 
         String command = parts[0].toUpperCase();
 
-        try {
 
-            // PING
-            if (command.equals("PING")) {
-                return "PONG";
+        // PING
+        if (command.equals("PING")) {
+
+            if (parts.length != 1) {
+                return "ERR wrong number of arguments for PING";
             }
 
-            // SET
-            if (command.equals("SET")) {
+            return "PONG";
+        }
 
-                if (parts.length < 3) {
-                    return "ERR wrong number of arguments for SET";
-                }
 
-                store.set(parts[1], parts[2]);
-                return "OK";
+        // SET
+        if (command.equals("SET")) {
+
+            if (parts.length != 3) {
+                return "ERR wrong number of arguments for SET";
             }
 
-            // GET
-            if (command.equals("GET")) {
+            store.set(parts[1], parts[2]);
 
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for GET";
-                }
+            return "OK";
+        }
 
-                String value = store.get(parts[1]);
 
-                if (value == null) {
-                    return "(nil)";
-                }
+        // GET
+        if (command.equals("GET")) {
 
-                return value;
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for GET";
             }
 
-            // DELETE
-            if (command.equals("DELETE")) {
+            String value = store.get(parts[1]);
 
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for DELETE";
-                }
-
-                store.delete(parts[1]);
-                return "OK";
+            if (value == null) {
+                return "(nil)";
             }
 
-            // EXISTS
-            if (command.equals("EXISTS")) {
+            return value;
+        }
 
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for EXISTS";
-                }
+
+        // DELETE
+        if (command.equals("DELETE")) {
+
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for DELETE";
+            }
+
+            return String.valueOf(
+                    store.delete(parts[1])
+            );
+        }
+
+
+        // EXISTS
+        if (command.equals("EXISTS")) {
+
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for EXISTS";
+            }
+
+            return String.valueOf(
+                    store.exists(parts[1])
+            );
+        }
+
+
+        // EXPIRE
+        if (command.equals("EXPIRE")) {
+
+            if (parts.length != 3) {
+                return "ERR wrong number of arguments for EXPIRE";
+            }
+
+            try {
+
+                long seconds = Long.parseLong(parts[2]);
 
                 return String.valueOf(
-                        store.exists(parts[1])
+                        store.expire(parts[1], seconds)
                 );
+
+            } catch (NumberFormatException e) {
+
+                return "ERR invalid number";
+            }
+        }
+
+
+        // TTL
+        if (command.equals("TTL")) {
+
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for TTL";
             }
 
-            // EXPIRE
-            if (command.equals("EXPIRE")) {
+            return String.valueOf(
+                    store.ttl(parts[1])
+            );
+        }
 
-                if (parts.length < 3) {
-                    return "ERR wrong number of arguments for EXPIRE";
-                }
 
-                long seconds =
-                        Long.parseLong(parts[2]);
+        // KEYS
+        if (command.equals("KEYS")) {
 
-                boolean result =
-                        store.expire(parts[1], seconds);
-
-                return String.valueOf(result);
+            if (parts.length != 1) {
+                return "ERR wrong number of arguments for KEYS";
             }
 
-            // TTL
-            if (command.equals("TTL")) {
+            return store.keys().toString();
+        }
 
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for TTL";
-                }
 
-                return String.valueOf(
-                        store.ttl(parts[1])
-                );
+        // INCR
+        if (command.equals("INCR")) {
+
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for INCR";
             }
 
-            // KEYS
-            if (command.equals("KEYS")) {
-
-                if (parts.length > 1) {
-                    return "ERR wrong number of arguments for KEYS";
-                }
-
-                return store.keys().toString();
-            }
-
-            // INCR
-            if (command.equals("INCR")) {
-
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for INCR";
-                }
+            try {
 
                 return String.valueOf(
                         store.incr(parts[1])
                 );
+
+            } catch (IllegalArgumentException e) {
+
+                return e.getMessage();
+            }
+        }
+
+
+        // DECR
+        if (command.equals("DECR")) {
+
+            if (parts.length != 2) {
+                return "ERR wrong number of arguments for DECR";
             }
 
-            // DECR
-            if (command.equals("DECR")) {
-
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for DECR";
-                }
+            try {
 
                 return String.valueOf(
                         store.decr(parts[1])
                 );
+
+            } catch (IllegalArgumentException e) {
+
+                return e.getMessage();
+            }
+        }
+
+
+        // INCRBY
+        if (command.equals("INCRBY")) {
+
+            if (parts.length != 3) {
+                return "ERR wrong number of arguments for INCRBY";
             }
 
-            // APPEND
-            if (command.equals("APPEND")) {
+            try {
 
-                if (parts.length < 3) {
-                    return "ERR wrong number of arguments for APPEND";
-                }
+                long amount = Long.parseLong(parts[2]);
 
                 return String.valueOf(
-                        store.append(parts[1], parts[2])
-                );
-            }
-
-            // MSET
-            if (command.equals("MSET")) {
-
-                if (parts.length < 3 || parts.length % 2 == 0) {
-                    return "ERR wrong number of arguments for MSET";
-                }
-
-                String[] keyValuePairs =
-                        new String[parts.length - 1];
-
-                System.arraycopy(
-                        parts,
-                        1,
-                        keyValuePairs,
-                        0,
-                        parts.length - 1
+                        store.incrBy(parts[1], amount)
                 );
 
-                store.mset(keyValuePairs);
+            } catch (NumberFormatException e) {
 
-                return "OK";
+                return "ERR invalid number";
+
+            } catch (IllegalArgumentException e) {
+
+                return e.getMessage();
             }
-
-            // MGET
-            if (command.equals("MGET")) {
-
-                if (parts.length < 2) {
-                    return "ERR wrong number of arguments for MGET";
-                }
-
-                String[] keys =
-                        new String[parts.length - 1];
-
-                System.arraycopy(
-                        parts,
-                        1,
-                        keys,
-                        0,
-                        parts.length - 1
-                );
-
-                return store.mget(keys);
-            }
-
-            // FLUSHALL
-            if (command.equals("FLUSHALL")) {
-
-                if (parts.length > 1) {
-                    return "ERR wrong number of arguments for FLUSHALL";
-                }
-
-                store.flushAll();
-
-                return "OK";
-            }
-
-            // Unknown command
-            return "ERR unknown command";
-
-        } catch (NumberFormatException e) {
-
-            return "ERR invalid number";
-
-        } catch (Exception e) {
-
-            return "ERR " + e.getMessage();
         }
+
+
+        // DECRBY
+        if (command.equals("DECRBY")) {
+
+            if (parts.length != 3) {
+                return "ERR wrong number of arguments for DECRBY";
+            }
+
+            try {
+
+                long amount = Long.parseLong(parts[2]);
+
+                return String.valueOf(
+                        store.decrBy(parts[1], amount)
+                );
+
+            } catch (NumberFormatException e) {
+
+                return "ERR invalid number";
+
+            } catch (IllegalArgumentException e) {
+
+                return e.getMessage();
+            }
+        }
+
+
+        // APPEND
+        if (command.equals("APPEND")) {
+
+            if (parts.length < 3) {
+                return "ERR wrong number of arguments for APPEND";
+            }
+
+            return String.valueOf(
+                    store.append(parts[1], parts[2])
+            );
+        }
+
+
+        // MSET
+        if (command.equals("MSET")) {
+
+            if (parts.length < 3
+                    || parts.length % 2 == 0) {
+
+                return "ERR wrong number of arguments for MSET";
+            }
+
+            String[] keyValuePairs =
+                    new String[parts.length - 1];
+
+            System.arraycopy(
+                    parts,
+                    1,
+                    keyValuePairs,
+                    0,
+                    parts.length - 1
+            );
+
+            store.mset(keyValuePairs);
+
+            return "OK";
+        }
+
+
+        // MGET
+        if (command.equals("MGET")) {
+
+            if (parts.length < 2) {
+                return "ERR wrong number of arguments for MGET";
+            }
+
+            String[] keys =
+                    new String[parts.length - 1];
+
+            System.arraycopy(
+                    parts,
+                    1,
+                    keys,
+                    0,
+                    parts.length - 1
+            );
+
+            return store.mget(keys);
+        }
+
+
+        // FLUSHALL
+        if (command.equals("FLUSHALL")) {
+
+            if (parts.length != 1) {
+                return "ERR wrong number of arguments for FLUSHALL";
+            }
+
+            store.flushAll();
+
+            return "OK";
+        }
+
+
+        // Unknown command
+        return "ERR unknown command";
     }
 }

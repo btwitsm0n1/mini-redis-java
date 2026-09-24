@@ -7,14 +7,13 @@ import java.util.concurrent.TimeUnit;
 
 public class DataStore {
 
-    private final Map<String, String> store =
-            new ConcurrentHashMap<>();
+    private final Map<String, String> store = new ConcurrentHashMap<>();
 
-    private final Map<String, Long> expiryTimes =
-            new ConcurrentHashMap<>();
+    private final Map<String, Long> expiryTimes = new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor();
+
 
     public DataStore() {
 
@@ -26,14 +25,16 @@ public class DataStore {
         );
     }
 
+
     // SET command
     public void set(String key, String value) {
 
         store.put(key, value);
 
-        // A new SET removes any previous expiry
+        // New SET removes any previous expiry
         expiryTimes.remove(key);
     }
+
 
     // GET command
     public String get(String key) {
@@ -46,12 +47,17 @@ public class DataStore {
         return store.get(key);
     }
 
-    // DELETE command
-    public void delete(String key) {
 
-        store.remove(key);
+    // DELETE command
+    public boolean delete(String key) {
+
+        boolean removed = store.remove(key) != null;
+
         expiryTimes.remove(key);
+
+        return removed;
     }
+
 
     // EXISTS command
     public boolean exists(String key) {
@@ -63,6 +69,7 @@ public class DataStore {
 
         return store.containsKey(key);
     }
+
 
     // EXPIRE command
     public boolean expire(String key, long seconds) {
@@ -84,6 +91,7 @@ public class DataStore {
 
         return true;
     }
+
 
     // TTL command
     public long ttl(String key) {
@@ -112,91 +120,146 @@ public class DataStore {
             return -2;
         }
 
-        // Round up to the next second
         return (remainingMillis + 999) / 1000;
     }
+
 
     // KEYS command
     public Set<String> keys() {
 
-        // Remove expired keys before returning keys
         removeExpiredKeys();
 
         return store.keySet();
     }
 
-    // Return total number of keys
-    public int size() {
-
-        // Remove expired keys before counting
-        removeExpiredKeys();
-
-        return store.size();
-    }
 
     // INCR command
     public long incr(String key) {
 
-        // Remove key if it has expired
         if (isExpired(key)) {
             delete(key);
         }
 
         String value = store.get(key);
 
-        // If key does not exist, start from 1
         if (value == null) {
-            store.put(key, "1");
-            return 1;
+            value = "0";
         }
 
         try {
-            long number = Long.parseLong(value);
 
-            number++;
+            long currentValue = Long.parseLong(value);
 
-            store.put(key, String.valueOf(number));
+            long newValue = currentValue + 1;
 
-            return number;
+            store.put(key, String.valueOf(newValue));
+
+            return newValue;
 
         } catch (NumberFormatException e) {
+
             throw new IllegalArgumentException(
-                    "value is not an integer"
+                    "ERR value is not an integer"
             );
         }
     }
+
 
     // DECR command
     public long decr(String key) {
 
-        // Remove key if it has expired
         if (isExpired(key)) {
             delete(key);
         }
 
         String value = store.get(key);
 
-        // If key does not exist, start from -1
         if (value == null) {
-            store.put(key, "-1");
-            return -1;
+            value = "0";
         }
 
         try {
-            long number = Long.parseLong(value);
 
-            number--;
+            long currentValue = Long.parseLong(value);
 
-            store.put(key, String.valueOf(number));
+            long newValue = currentValue - 1;
 
-            return number;
+            store.put(key, String.valueOf(newValue));
+
+            return newValue;
 
         } catch (NumberFormatException e) {
+
             throw new IllegalArgumentException(
-                    "value is not an integer"
+                    "ERR value is not an integer"
             );
         }
     }
+
+
+    // INCRBY command
+    public long incrBy(String key, long amount) {
+
+        if (isExpired(key)) {
+            delete(key);
+        }
+
+        String value = store.get(key);
+
+        if (value == null) {
+            value = "0";
+        }
+
+        try {
+
+            long currentValue = Long.parseLong(value);
+
+            long newValue = currentValue + amount;
+
+            store.put(key, String.valueOf(newValue));
+
+            return newValue;
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException(
+                    "ERR value is not an integer"
+            );
+        }
+    }
+
+
+    // DECRBY command
+    public long decrBy(String key, long amount) {
+
+        if (isExpired(key)) {
+            delete(key);
+        }
+
+        String value = store.get(key);
+
+        if (value == null) {
+            value = "0";
+        }
+
+        try {
+
+            long currentValue = Long.parseLong(value);
+
+            long newValue = currentValue - amount;
+
+            store.put(key, String.valueOf(newValue));
+
+            return newValue;
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException(
+                    "ERR value is not an integer"
+            );
+        }
+    }
+
 
     // APPEND command
     public int append(String key, String value) {
@@ -208,7 +271,9 @@ public class DataStore {
         String existingValue = store.get(key);
 
         if (existingValue == null) {
+
             store.put(key, value);
+
             return value.length();
         }
 
@@ -219,17 +284,20 @@ public class DataStore {
         return newValue.length();
     }
 
+
     // MSET command
     public void mset(String[] keyValuePairs) {
 
         for (int i = 0; i < keyValuePairs.length; i += 2) {
 
             String key = keyValuePairs[i];
+
             String value = keyValuePairs[i + 1];
 
             set(key, value);
         }
     }
+
 
     // MGET command
     public String mget(String[] keys) {
@@ -243,12 +311,16 @@ public class DataStore {
             String value = get(keys[i]);
 
             if (value == null) {
+
                 result.append("(nil)");
+
             } else {
+
                 result.append(value);
             }
 
             if (i < keys.length - 1) {
+
                 result.append(", ");
             }
         }
@@ -258,14 +330,17 @@ public class DataStore {
         return result.toString();
     }
 
+
     // FLUSHALL command
     public void flushAll() {
 
         store.clear();
+
         expiryTimes.clear();
     }
 
-    // Check whether a key is expired
+
+    // Check whether key is expired
     private boolean isExpired(String key) {
 
         Long expiryTime = expiryTimes.get(key);
@@ -277,20 +352,21 @@ public class DataStore {
         return System.currentTimeMillis() >= expiryTime;
     }
 
-    // Automatically remove expired keys
+
+    // Remove expired keys automatically
     private void removeExpiredKeys() {
 
         long currentTime = System.currentTimeMillis();
 
-        for (Map.Entry<String, Long> entry :
-                expiryTimes.entrySet()) {
+        for (String key : expiryTimes.keySet()) {
 
-            String key = entry.getKey();
-            long expiryTime = entry.getValue();
+            Long expiryTime = expiryTimes.get(key);
 
-            if (currentTime >= expiryTime) {
+            if (expiryTime != null
+                    && currentTime >= expiryTime) {
 
                 store.remove(key);
+
                 expiryTimes.remove(key);
             }
         }
