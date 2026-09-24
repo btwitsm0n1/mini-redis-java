@@ -12,6 +12,9 @@ public class DataStore {
 
     private final Map<String, Long> expiryTimes =
             new ConcurrentHashMap<>();
+            
+    private final Map<String, java.util.List<String>> lists =
+        new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor();
