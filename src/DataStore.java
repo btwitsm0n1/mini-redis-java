@@ -34,7 +34,6 @@ public class DataStore {
     public void set(String key, String value) {
 
         store.put(key, value);
-
         expiryTimes.remove(key);
     }
 
@@ -168,7 +167,10 @@ public class DataStore {
 
     // ---------------- INCRBY ----------------
 
-    public long incrBy(String key, long amount) {
+    public long incrBy(
+            String key,
+            long amount
+    ) {
 
         if (isExpired(key)) {
             delete(key);
@@ -253,9 +255,11 @@ public class DataStore {
             String[] keyValuePairs
     ) {
 
-        for (int i = 0;
-             i < keyValuePairs.length;
-             i += 2) {
+        for (
+                int i = 0;
+                i < keyValuePairs.length;
+                i += 2
+        ) {
 
             String key =
                     keyValuePairs[i];
@@ -276,9 +280,11 @@ public class DataStore {
 
         result.append("[");
 
-        for (int i = 0;
-             i < keys.length;
-             i++) {
+        for (
+                int i = 0;
+                i < keys.length;
+                i++
+        ) {
 
             if (i > 0) {
                 result.append(", ");
@@ -393,30 +399,26 @@ public class DataStore {
                 return "[]";
             }
 
-            // Convert negative start index
             if (start < 0) {
                 start = size + start;
             }
 
-            // Convert negative end index
             if (end < 0) {
                 end = size + end;
             }
 
-            // Start cannot be less than 0
             if (start < 0) {
                 start = 0;
             }
 
-            // End cannot exceed last index
             if (end >= size) {
                 end = size - 1;
             }
 
-            // Invalid range
-            if (start > end ||
-                    start >= size) {
-
+            if (
+                    start > end ||
+                    start >= size
+            ) {
                 return "[]";
             }
 
@@ -425,9 +427,11 @@ public class DataStore {
 
             result.append("[");
 
-            for (int i = start;
-                 i <= end;
-                 i++) {
+            for (
+                    int i = start;
+                    i <= end;
+                    i++
+            ) {
 
                 if (i > start) {
                     result.append(", ");
@@ -441,6 +445,31 @@ public class DataStore {
             result.append("]");
 
             return result.toString();
+        }
+    }
+
+    // ---------------- RPUSH ----------------
+
+    public int rpush(
+            String key,
+            String value
+    ) {
+
+        lists.putIfAbsent(
+                key,
+                java.util.Collections.synchronizedList(
+                        new java.util.LinkedList<>()
+                )
+        );
+
+        java.util.List<String> list =
+                lists.get(key);
+
+        synchronized (list) {
+
+            list.add(value);
+
+            return list.size();
         }
     }
 
@@ -474,8 +503,10 @@ public class DataStore {
 
     private void removeExpiredKeys() {
 
-        for (String key :
-                expiryTimes.keySet()) {
+        for (
+                String key :
+                expiryTimes.keySet()
+        ) {
 
             if (isExpired(key)) {
 

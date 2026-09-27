@@ -8,8 +8,10 @@ public class CommandHandler {
 
     public String execute(String[] parts) {
 
-        if (parts == null ||
-                parts.length == 0) {
+        if (
+                parts == null ||
+                parts.length == 0
+        ) {
 
             return "ERR empty command";
         }
@@ -284,8 +286,10 @@ public class CommandHandler {
 
         if (command.equals("MSET")) {
 
-            if (parts.length < 3 ||
-                    parts.length % 2 == 0) {
+            if (
+                    parts.length < 3 ||
+                    parts.length % 2 == 0
+            ) {
 
                 return "ERR wrong number of arguments for MSET";
             }
@@ -375,9 +379,11 @@ public class CommandHandler {
 
             int added = 0;
 
-            for (int i = 2;
-                 i < parts.length;
-                 i++) {
+            for (
+                    int i = 2;
+                    i < parts.length;
+                    i++
+            ) {
 
                 added =
                         store.lpush(
@@ -420,6 +426,38 @@ public class CommandHandler {
                     parts[1],
                     start,
                     end
+            );
+        }
+
+        // ---------------- RPUSH ----------------
+
+        if (command.equals("RPUSH")) {
+
+            if (parts.length < 3) {
+
+                return "ERR wrong number of arguments for RPUSH";
+            }
+
+            String key =
+                    parts[1];
+
+            int added = 0;
+
+            for (
+                    int i = 2;
+                    i < parts.length;
+                    i++
+            ) {
+
+                added =
+                        store.rpush(
+                                key,
+                                parts[i]
+                        );
+            }
+
+            return String.valueOf(
+                    added
             );
         }
 
