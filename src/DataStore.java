@@ -35,7 +35,6 @@ public class DataStore {
 
         store.put(key, value);
 
-        // New SET removes any previous expiry
         expiryTimes.remove(key);
     }
 
@@ -182,15 +181,20 @@ public class DataStore {
         if (value != null) {
 
             try {
-                currentValue = Long.parseLong(value);
+
+                currentValue =
+                        Long.parseLong(value);
+
             } catch (NumberFormatException e) {
+
                 throw new IllegalArgumentException(
                         "ERR value is not an integer"
                 );
             }
         }
 
-        long newValue = currentValue + amount;
+        long newValue =
+                currentValue + amount;
 
         store.put(
                 key,
@@ -204,28 +208,39 @@ public class DataStore {
 
     // ---------------- DECRBY ----------------
 
-    public long decrBy(String key, long amount) {
+    public long decrBy(
+            String key,
+            long amount
+    ) {
 
         return incrBy(key, -amount);
     }
 
     // ---------------- APPEND ----------------
 
-    public int append(String key, String value) {
+    public int append(
+            String key,
+            String value
+    ) {
 
         if (isExpired(key)) {
             delete(key);
         }
 
-        String oldValue = store.get(key);
+        String oldValue =
+                store.get(key);
 
         if (oldValue == null) {
             oldValue = "";
         }
 
-        String newValue = oldValue + value;
+        String newValue =
+                oldValue + value;
 
-        store.put(key, newValue);
+        store.put(
+                key,
+                newValue
+        );
 
         expiryTimes.remove(key);
 
@@ -234,12 +249,19 @@ public class DataStore {
 
     // ---------------- MSET ----------------
 
-    public void mset(String[] keyValuePairs) {
+    public void mset(
+            String[] keyValuePairs
+    ) {
 
-        for (int i = 0; i < keyValuePairs.length; i += 2) {
+        for (int i = 0;
+             i < keyValuePairs.length;
+             i += 2) {
 
-            String key = keyValuePairs[i];
-            String value = keyValuePairs[i + 1];
+            String key =
+                    keyValuePairs[i];
+
+            String value =
+                    keyValuePairs[i + 1];
 
             set(key, value);
         }
@@ -254,13 +276,17 @@ public class DataStore {
 
         result.append("[");
 
-        for (int i = 0; i < keys.length; i++) {
+        for (int i = 0;
+             i < keys.length;
+             i++) {
 
             if (i > 0) {
                 result.append(", ");
             }
 
-            result.append(get(keys[i]));
+            result.append(
+                    get(keys[i])
+            );
         }
 
         result.append("]");
@@ -270,7 +296,10 @@ public class DataStore {
 
     // ---------------- SETNX ----------------
 
-    public boolean setNx(String key, String value) {
+    public boolean setNx(
+            String key,
+            String value
+    ) {
 
         if (isExpired(key)) {
             delete(key);
@@ -298,9 +327,13 @@ public class DataStore {
             delete(key);
         }
 
-        String oldValue = store.get(key);
+        String oldValue =
+                store.get(key);
 
-        store.put(key, newValue);
+        store.put(
+                key,
+                newValue
+        );
 
         expiryTimes.remove(key);
 
@@ -336,6 +369,81 @@ public class DataStore {
         }
     }
 
+    // ---------------- LRANGE ----------------
+
+    public String lrange(
+            String key,
+            int start,
+            int end
+    ) {
+
+        java.util.List<String> list =
+                lists.get(key);
+
+        if (list == null) {
+            return "[]";
+        }
+
+        synchronized (list) {
+
+            int size =
+                    list.size();
+
+            if (size == 0) {
+                return "[]";
+            }
+
+            // Convert negative start index
+            if (start < 0) {
+                start = size + start;
+            }
+
+            // Convert negative end index
+            if (end < 0) {
+                end = size + end;
+            }
+
+            // Start cannot be less than 0
+            if (start < 0) {
+                start = 0;
+            }
+
+            // End cannot exceed last index
+            if (end >= size) {
+                end = size - 1;
+            }
+
+            // Invalid range
+            if (start > end ||
+                    start >= size) {
+
+                return "[]";
+            }
+
+            StringBuilder result =
+                    new StringBuilder();
+
+            result.append("[");
+
+            for (int i = start;
+                 i <= end;
+                 i++) {
+
+                if (i > start) {
+                    result.append(", ");
+                }
+
+                result.append(
+                        list.get(i)
+                );
+            }
+
+            result.append("]");
+
+            return result.toString();
+        }
+    }
+
     // ---------------- FLUSHALL ----------------
 
     public void flushAll() {
@@ -366,7 +474,8 @@ public class DataStore {
 
     private void removeExpiredKeys() {
 
-        for (String key : expiryTimes.keySet()) {
+        for (String key :
+                expiryTimes.keySet()) {
 
             if (isExpired(key)) {
 
