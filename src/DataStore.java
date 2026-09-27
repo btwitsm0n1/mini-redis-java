@@ -399,26 +399,32 @@ public class DataStore {
                 return "[]";
             }
 
+            // Convert negative start index
             if (start < 0) {
                 start = size + start;
             }
 
+            // Convert negative end index
             if (end < 0) {
                 end = size + end;
             }
 
+            // Start cannot be less than 0
             if (start < 0) {
                 start = 0;
             }
 
+            // End cannot exceed last index
             if (end >= size) {
                 end = size - 1;
             }
 
+            // Invalid range
             if (
                     start > end ||
                     start >= size
             ) {
+
                 return "[]";
             }
 
@@ -470,6 +476,27 @@ public class DataStore {
             list.add(value);
 
             return list.size();
+        }
+    }
+
+    // ---------------- LPOP ----------------
+
+    public String lpop(String key) {
+
+        java.util.List<String> list =
+                lists.get(key);
+
+        if (list == null) {
+            return "(nil)";
+        }
+
+        synchronized (list) {
+
+            if (list.isEmpty()) {
+                return "(nil)";
+            }
+
+            return list.remove(0);
         }
     }
 

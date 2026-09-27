@@ -461,6 +461,20 @@ public class CommandHandler {
             );
         }
 
+        // ---------------- LPOP ----------------
+
+        if (command.equals("LPOP")) {
+
+            if (parts.length != 2) {
+
+                return "ERR wrong number of arguments for LPOP";
+            }
+
+            return store.lpop(
+                    parts[1]
+            );
+        }
+
         // ---------------- FLUSHALL ----------------
 
         if (command.equals("FLUSHALL")) {
