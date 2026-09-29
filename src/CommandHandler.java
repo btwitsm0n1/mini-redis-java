@@ -475,6 +475,34 @@ public class CommandHandler {
             );
         }
 
+        // ---------------- RPOP ----------------
+
+        if (command.equals("RPOP")) {
+
+            if (parts.length != 2) {
+
+                return "ERR wrong number of arguments for RPOP";
+            }
+
+            return store.rpop(
+                    parts[1]
+            );
+        }
+
+        // ---------------- LLEN ----------------
+
+        if (command.equals("LLEN")) {
+
+            if (parts.length != 2) {
+
+                return "ERR wrong number of arguments for LLEN";
+            }
+
+            return String.valueOf(
+                    store.llen(parts[1])
+            );
+        }
+
         // ---------------- FLUSHALL ----------------
 
         if (command.equals("FLUSHALL")) {

@@ -500,6 +500,44 @@ public class DataStore {
         }
     }
 
+    // ---------------- RPOP ----------------
+
+    public String rpop(String key) {
+
+        java.util.List<String> list =
+                lists.get(key);
+
+        if (list == null) {
+            return "(nil)";
+        }
+
+        synchronized (list) {
+
+            if (list.isEmpty()) {
+                return "(nil)";
+            }
+
+            return list.remove(list.size() - 1);
+        }
+    }
+
+    // ---------------- LLEN ----------------
+
+    public int llen(String key) {
+
+        java.util.List<String> list =
+                lists.get(key);
+
+        if (list == null) {
+            return 0;
+        }
+
+        synchronized (list) {
+
+            return list.size();
+        }
+    }
+
     // ---------------- FLUSHALL ----------------
 
     public void flushAll() {
