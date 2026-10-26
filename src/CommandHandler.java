@@ -67,9 +67,23 @@ public class CommandHandler {
                     return "ERR seconds must be greater than zero";
                 }
 
-                boolean result = store.expire(parts[1], seconds);
+                return String.valueOf(store.expire(parts[1], seconds));
+            }
 
-                return result ? "true" : "false";
+            if (command.equals("PERSIST")) {
+                if (parts.length != 2) {
+                    return "ERR usage: PERSIST key";
+                }
+
+                return String.valueOf(store.persist(parts[1]));
+            }
+
+            if (command.equals("TTL")) {
+                if (parts.length != 2) {
+                    return "ERR usage: TTL key";
+                }
+
+                return String.valueOf(store.ttl(parts[1]));
             }
 
             return "Unknown command";

@@ -11,10 +11,13 @@ public class DataStore {
     private final Map<String, Long> expiryTimes = new ConcurrentHashMap<>();
 
     private final ScheduledExecutorService scheduler =
-            Executors.newSingleThreadScheduledExecutor();
+            Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread thread = new Thread(r, "MiniRedis-Expiry-Cleanup");
+                thread.setDaemon(true);
+                return thread;
+            });
 
     public DataStore() {
-
         scheduler.scheduleAtFixedRate(
                 this::removeExpiredKeys,
                 1,
@@ -24,15 +27,11 @@ public class DataStore {
     }
 
     public void set(String key, String value) {
-
         store.put(key, value);
-
-        // Setting a key again removes its previous expiry.
         expiryTimes.remove(key);
     }
 
     public String get(String key) {
-
         if (isExpired(key)) {
             delete(key);
             return null;
@@ -42,13 +41,11 @@ public class DataStore {
     }
 
     public void delete(String key) {
-
         store.remove(key);
         expiryTimes.remove(key);
     }
 
     public boolean exists(String key) {
-
         if (isExpired(key)) {
             delete(key);
             return false;
@@ -58,8 +55,7 @@ public class DataStore {
     }
 
     public boolean expire(String key, long seconds) {
-
-        if (!store.containsKey(key) || seconds <= 0) {
+        if (!exists(key) || seconds <= 0) {
             return false;
         }
 
@@ -67,12 +63,40 @@ public class DataStore {
                 System.currentTimeMillis() + (seconds * 1000);
 
         expiryTimes.put(key, expiryTime);
-
         return true;
     }
 
-    private boolean isExpired(String key) {
+    public boolean persist(String key) {
+        if (!exists(key)) {
+            return false;
+        }
 
+        return expiryTimes.remove(key) != null;
+    }
+
+    public long ttl(String key) {
+        if (!exists(key)) {
+            return -2;
+        }
+
+        Long expiryTime = expiryTimes.get(key);
+
+        if (expiryTime == null) {
+            return -1;
+        }
+
+        long remainingMillis =
+                expiryTime - System.currentTimeMillis();
+
+        if (remainingMillis <= 0) {
+            delete(key);
+            return -2;
+        }
+
+        return (remainingMillis + 999) / 1000;
+    }
+
+    private boolean isExpired(String key) {
         Long expiryTime = expiryTimes.get(key);
 
         if (expiryTime == null) {
@@ -83,13 +107,11 @@ public class DataStore {
     }
 
     private void removeExpiredKeys() {
-
         long currentTime = System.currentTimeMillis();
 
         for (Map.Entry<String, Long> entry : expiryTimes.entrySet()) {
-
             String key = entry.getKey();
-            long expiryTime = entry.getValue();
+            Long expiryTime = entry.getValue();
 
             if (currentTime >= expiryTime) {
                 store.remove(key);
