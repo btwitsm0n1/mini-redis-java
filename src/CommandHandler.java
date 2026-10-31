@@ -16,80 +16,115 @@ public class CommandHandler {
 
         try {
 
+            // PING
+            if (command.equals("PING")) {
+                if (parts.length != 1) {
+                    return "ERR wrong number of arguments for PING";
+                }
+                return "PONG";
+            }
+
+            // INFO
+            if (command.equals("INFO")) {
+                if (parts.length != 1) {
+                    return "ERR wrong number of arguments for INFO";
+                }
+
+                return "MiniRedis Server\n"
+                        + "Version: 1.0\n"
+                        + "Total keys: " + store.size() + "\n"
+                        + "Total lists: " + store.listSize();
+            }
+
+            // SET
             if (command.equals("SET")) {
                 if (parts.length != 3) {
-                    return "ERR usage: SET key value";
+                    return "ERR wrong number of arguments for SET";
                 }
 
                 store.set(parts[1], parts[2]);
                 return "OK";
             }
 
+            // GET
             if (command.equals("GET")) {
                 if (parts.length != 2) {
-                    return "ERR usage: GET key";
+                    return "ERR wrong number of arguments for GET";
                 }
 
-                String value = store.get(parts[1]);
-
-                if (value == null) {
-                    return "(nil)";
-                }
-
-                return value;
+                return store.get(parts[1]);
             }
 
+            // DELETE
             if (command.equals("DELETE")) {
-                if (parts.length != 2) {
-                    return "ERR usage: DELETE key";
+                if (parts.length < 2) {
+                    return "ERR wrong number of arguments for DELETE";
                 }
 
-                store.delete(parts[1]);
-                return "OK";
+                return String.valueOf(store.delete(
+                        java.util.Arrays.copyOfRange(parts, 1, parts.length)
+                ));
             }
 
+            // EXISTS
             if (command.equals("EXISTS")) {
                 if (parts.length != 2) {
-                    return "ERR usage: EXISTS key";
+                    return "ERR wrong number of arguments for EXISTS";
                 }
 
                 return String.valueOf(store.exists(parts[1]));
             }
 
+            // EXPIRE
             if (command.equals("EXPIRE")) {
                 if (parts.length != 3) {
-                    return "ERR usage: EXPIRE key seconds";
+                    return "ERR wrong number of arguments for EXPIRE";
                 }
 
                 long seconds = Long.parseLong(parts[2]);
 
-                if (seconds <= 0) {
-                    return "ERR seconds must be greater than zero";
+                if (seconds < 0) {
+                    return "ERR expiry must not be negative";
                 }
 
                 return String.valueOf(store.expire(parts[1], seconds));
             }
 
-            if (command.equals("PERSIST")) {
-                if (parts.length != 2) {
-                    return "ERR usage: PERSIST key";
-                }
-
-                return String.valueOf(store.persist(parts[1]));
-            }
-
+            // TTL
             if (command.equals("TTL")) {
                 if (parts.length != 2) {
-                    return "ERR usage: TTL key";
+                    return "ERR wrong number of arguments for TTL";
                 }
 
                 return String.valueOf(store.ttl(parts[1]));
             }
 
-            return "Unknown command";
+            // KEYS
+            if (command.equals("KEYS")) {
+                if (parts.length != 1) {
+                    return "ERR wrong number of arguments for KEYS";
+                }
+
+                return store.keys().toString();
+            }
+
+            // FLUSHALL
+            if (command.equals("FLUSHALL")) {
+                if (parts.length != 1) {
+                    return "ERR wrong number of arguments for FLUSHALL";
+                }
+
+                store.flushAll();
+                return "OK";
+            }
+
+            return "ERR unknown command";
 
         } catch (NumberFormatException e) {
-            return "ERR seconds must be a valid number";
+            return "ERR invalid number";
+
+        } catch (Exception e) {
+            return "ERR " + e.getMessage();
         }
     }
 }
